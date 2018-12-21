@@ -65,16 +65,20 @@ void flatToneSetup()
 void toneTimerSetup()
 {
   // Connect pin PB1 to timer 1
-  set(DDRB, DDD1);
-
-  // Toggle timer 1 output on compare match
-  set(TCCR1A, COM1A0);
+  set(DDRB, DDB1);
 
   // Clear timer 1 on compare match
   clear(TCCR1B, WGM13);
   set(TCCR1B, WGM12);
   clear(TCCR1A, WGM11);
   clear(TCCR1A, WGM10);
+
+  // Set pin PD4 as output
+  set(DDRD, DDD4);
+
+  // Set default tone
+  OCR1AH = 2271 >> 8;
+  OCR1AL = 2271 & 0xFF;
 }
 
 void tone(count)
@@ -87,15 +91,28 @@ void tone(count)
   clear(TCCR1B, CS12);
   clear(TCCR1B, CS11);
   set(TCCR1B, CS10);
+
+  // Enable speaker
+  set(PORTD, PORTD4);
+
+  // Toggle timer 1 output on compare match
+  set(TCCR1A, COM1A0);
 }
 
 int isTuned()
 {
-  return (test(TCCR1B, CS10) | test(TCCR1B, CS11) | test(TCCR1B, CS12));
+  return test(PORTD, PORTD4);
 }
 
 void silence()
 {
+  // Disable speaker
+  clear(PORTD, PORTD4);
+
+  // Disconnect timer output
+  clear(TCCR1A, COM1A0);
+  clear(TCCR1A, COM1A1);
+
   // Deactivate timer 1
   clear(TCCR1B, CS12);
   clear(TCCR1B, CS11);
