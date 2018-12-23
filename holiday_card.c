@@ -73,8 +73,8 @@ void toneTimerSetup()
   clear(TCCR1A, WGM11);
   clear(TCCR1A, WGM10);
 
-  // Set pin PD4 as output
-  set(DDRD, DDD4);
+  // Set pin PC0 as output
+  set(DDRC, DDC0);
 
   // Set default tone
   OCR1AH = 2271 >> 8;
@@ -93,7 +93,7 @@ void tone(count)
   set(TCCR1B, CS10);
 
   // Enable speaker
-  set(PORTD, PORTD4);
+  set(PORTC, PORTC0);
 
   // Toggle timer 1 output on compare match
   set(TCCR1A, COM1A0);
@@ -101,13 +101,13 @@ void tone(count)
 
 int isTuned()
 {
-  return test(PORTD, PORTD4);
+  return test(PORTC, PORTC0);
 }
 
 void silence()
 {
   // Disable speaker
-  clear(PORTD, PORTD4);
+  clear(PORTC, PORTC0);
 
   // Disconnect timer output
   clear(TCCR1A, COM1A0);
