@@ -21,46 +21,12 @@
 #define test(reg, bit) (reg & (1 << bit))
 #endif
 
-void blinkSetup()
-{
-  // Connect pin PD6 to timer 0
-  set(DDRD, DDD6);
+//const static uint16_t CLK_IO = 1000000;
+//const static uint8_t PRESCALE = 1;
+#define CLK_IO 1000000
+#define PRESCALE 1
+#define FREQ_TO_COUNT(freq) ((CLK_IO / (2 * freq * PRESCALE)) - 1)
 
-  // Set a 0.5-second period on timer 0
-  OCR0A = 0xFF;
-
-  // Toggle timer 0 output on compare match
-  clear(TCCR0A, COM0A1);
-  set(TCCR0A, COM0A0);
-
-  // Activate timer 0 and scale clkIO by 1024
-  set(TCCR0B, CS02);
-  clear(TCCR0B, CS01);
-  set(TCCR0B, CS00);
-}
-
-void flatToneSetup()
-{
-  // Connect pin PB3 to timer 2
-  set(DDRB, DDD3);
-
-  // Set a ~2kHz frequency
-  OCR2A = 8;
-
-  // Toggle timer 2 output on compare match
-  clear(TCCR2A, COM2A1);
-  set(TCCR2A, COM2A0);
-
-  // Clear timer 2 on compare match
-  clear(TCCR2B, WGM22);
-  set(TCCR2A, WGM21);
-  clear(TCCR2A, WGM20);
-
-  // Activate timer 2 and scale clkIO by 32
-  clear(TCCR2B, CS22);
-  set(TCCR2B, CS21);
-  set(TCCR2B, CS20);
-}
 
 void toneTimerSetup()
 {
@@ -81,8 +47,53 @@ void toneTimerSetup()
   OCR1AL = 2271 & 0xFF;
 }
 
-void tone(count)
+void silence()
 {
+  // Disable speaker
+  clear(PORTC, PORTC0);
+
+  // Disconnect timer output
+  clear(TCCR1A, COM1A0);
+  clear(TCCR1A, COM1A1);
+
+  // Deactivate timer 1
+  clear(TCCR1B, CS12);
+  clear(TCCR1B, CS11);
+  clear(TCCR1B, CS10);
+}
+
+void tone(unsigned int keyCode)
+{
+  const static int MAX_KEY = 13;
+  const uint16_t keyToneMap [] = {
+    0,
+    FREQ_TO_COUNT(220), // A3
+    FREQ_TO_COUNT(233.0),
+    FREQ_TO_COUNT(246.94),
+    FREQ_TO_COUNT(261.63),
+    FREQ_TO_COUNT(277.18),
+    FREQ_TO_COUNT(293.66),
+    FREQ_TO_COUNT(311.13),
+    FREQ_TO_COUNT(329.63),
+    FREQ_TO_COUNT(349.23),
+    FREQ_TO_COUNT(369.99),
+    FREQ_TO_COUNT(392),
+    FREQ_TO_COUNT(415.3),
+    FREQ_TO_COUNT(440) // A4
+  };
+
+  if (keyCode > MAX_KEY)
+    {
+      return;
+    }
+
+  if (keyCode == 0)
+    {
+      silence();
+    }
+
+  uint16_t count = keyToneMap[keyCode];
+
   // Set compare value for timer 1
   OCR1AH = count >> 8;
   OCR1AL = count & 0xFF;
@@ -99,38 +110,6 @@ void tone(count)
   set(TCCR1A, COM1A0);
 }
 
-int isTuned()
-{
-  return test(PORTC, PORTC0);
-}
-
-void silence()
-{
-  // Disable speaker
-  clear(PORTC, PORTC0);
-
-  // Disconnect timer output
-  clear(TCCR1A, COM1A0);
-  clear(TCCR1A, COM1A1);
-
-  // Deactivate timer 1
-  clear(TCCR1B, CS12);
-  clear(TCCR1B, CS11);
-  clear(TCCR1B, CS10);
-}
-
-void toggleTone()
-{
-  if (isTuned())
-    {
-      silence();
-    }
-  else
-    {
-      tone(2271);
-    }
-}
-
 void ledSetup()
 {
   // Configure PD0-3 as outputs
@@ -140,12 +119,29 @@ void ledSetup()
   set(DDRD, DDD3);
 }
 
-void toggleLEDs()
+void toggleLEDs(unsigned int keyCode)
 {
-  set(PIND, PIND0);
-  set(PIND, PIND1);
-  set(PIND, PIND2);
-  set(PIND, PIND3);
+  const int NUM_LEDS = 4;
+  const uint8_t keyLEDMap [] = {
+    PIND3,
+    PIND2,
+    PIND1,
+    PIND0
+  };
+
+  int ledIdx = 0;
+  for (ledIdx = 0; ledIdx < NUM_LEDS; ++ledIdx)
+    {
+      uint8_t ledPin = keyLEDMap[ledIdx];
+      if (keyCode & (1 << ledIdx))
+	{
+	  set(PIND, ledPin);
+	}
+      else
+	{
+	  clear(PIND, ledPin);
+	}
+    }
 }
 
 void keySetup()
@@ -167,10 +163,21 @@ void keySetup()
   set(PCICR, PCIE2);
 }
 
+unsigned int scanKeys()
+{
+  return (((test(PORTD, PORTD5) ? 1 : 0) << 3) |
+	  ((test(PORTD, PORTD6) ? 1 : 0) << 2) |
+	  ((test(PORTD, PORTD7) ? 1 : 0) << 1) |
+	  ((test(PORTB, PORTB0) ? 1 : 0) << 0));
+}
+
 void onKeyChange()
 {
-  toggleTone();
-  toggleLEDs();
+  unsigned int keyCode = scanKeys();
+
+  tone(keyCode);
+
+  toggleLEDs(keyCode);
 }
 
 ISR(PCINT0_vect)

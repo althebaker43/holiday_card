@@ -34,7 +34,7 @@ clean:
 lst:  $(PRG).lst
 
 %.lst: %.elf
-	$(OBJDUMP) -h -S $< > $@
+	$(OBJDUMP) -h -S -D $< > $@
 
 # Rules for building the .text rom images
 
