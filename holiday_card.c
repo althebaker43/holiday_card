@@ -32,17 +32,13 @@ void toneTimerSetup()
   set(DDRB, DDB1);
 
   // Clear timer 1 on compare match
-  clear(TCCR1B, WGM13);
   set(TCCR1B, WGM12);
-  clear(TCCR1A, WGM11);
-  clear(TCCR1A, WGM10);
 
   // Set pin PC0 as output
   set(DDRC, DDC0);
 
-  // Set default tone
-  OCR1AH = 2271 >> 8;
-  OCR1AL = 2271 & 0xFF;
+  // Toggle timer 1 output on compare match
+  set(TCCR1A, COM1A0);
 }
 
 void silence()
@@ -52,11 +48,8 @@ void silence()
 
   // Disconnect timer output
   clear(TCCR1A, COM1A0);
-  clear(TCCR1A, COM1A1);
 
   // Deactivate timer 1
-  clear(TCCR1B, CS12);
-  clear(TCCR1B, CS11);
   clear(TCCR1B, CS10);
 }
 
@@ -88,24 +81,26 @@ void tone(unsigned int keyCode)
   if (keyCode == 0)
     {
       silence();
+      return;
     }
 
   uint16_t count = keyToneMap[keyCode];
 
   // Set compare value for timer 1
-  OCR1AH = count >> 8;
+  OCR1AH = (count >> 8) & 0xFF;
   OCR1AL = count & 0xFF;
 
+  // Clear timer 1 on compare match
+  set(TCCR1B, WGM12);
+
+  // Toggle timer 1 output on compare match
+  set(TCCR1A, COM1A0);
+
   // Activate timer 1 (no clock scaling)
-  clear(TCCR1B, CS12);
-  clear(TCCR1B, CS11);
   set(TCCR1B, CS10);
 
   // Enable speaker
   set(PORTC, PORTC0);
-
-  // Toggle timer 1 output on compare match
-  set(TCCR1A, COM1A0);
 }
 
 void ledSetup()
