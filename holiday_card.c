@@ -21,8 +21,6 @@
 #define test(reg, bit) (reg & (1 << bit))
 #endif
 
-//const static uint16_t CLK_IO = 1000000;
-//const static uint8_t PRESCALE = 1;
 #define CLK_IO 1000000
 #define PRESCALE 1
 #define FREQ_TO_COUNT(freq) ((CLK_IO / (2 * freq * PRESCALE)) - 1)
@@ -112,63 +110,68 @@ void tone(unsigned int keyCode)
 
 void ledSetup()
 {
-  // Configure PD0-3 as outputs
-  set(DDRD, DDD0);
-  set(DDRD, DDD1);
-  set(DDRD, DDD2);
-  set(DDRD, DDD3);
+  // Configure PB0, PD5-7 as outputs
+  set(DDRB, DDB0);
+  set(DDRD, DDD5);
+  set(DDRD, DDD6);
+  set(DDRD, DDD7);
 }
 
 void toggleLEDs(unsigned int keyCode)
 {
   const int NUM_LEDS = 4;
-  const uint8_t keyLEDMap [] = {
-    PIND3,
-    PIND2,
-    PIND1,
-    PIND0
-  };
-
   int ledIdx = 0;
   for (ledIdx = 0; ledIdx < NUM_LEDS; ++ledIdx)
     {
-      uint8_t ledPin = keyLEDMap[ledIdx];
       if (keyCode & (1 << ledIdx))
 	{
-	  set(PIND, ledPin);
+	  switch (ledIdx)
+	    {
+	    case 0: set(PORTB, PORTB0); break;
+	    case 1: set(PORTD, PORTD5); break;
+	    case 2: set(PORTD, PORTD6); break;
+	    case 3: set(PORTD, PORTD7); break;
+	    default: break;
+	    };
 	}
       else
 	{
-	  clear(PIND, ledPin);
+	  switch (ledIdx)
+	    {
+	    case 0: clear(PORTB, PORTB0); break;
+	    case 1: clear(PORTD, PORTD5); break;
+	    case 2: clear(PORTD, PORTD6); break;
+	    case 3: clear(PORTD, PORTD7); break;
+	    default: break;
+	    };
 	}
     }
 }
 
 void keySetup()
 {
-  // Enable pull-ups on PB0, PD5-7
-  set(PORTB, PORTB0);
-  set(PORTD, PORTD5);
-  set(PORTD, PORTD6);
-  set(PORTD, PORTD7);
+  // Enable pull-ups on PD0-3
+  set(PORTD, PORTD0);
+  set(PORTD, PORTD1);
+  set(PORTD, PORTD2);
+  set(PORTD, PORTD3);
 
-  // Enable interrupts on PCINT0,21-23
-  set(PCMSK0, PCINT0);
-  set(PCMSK2, PCINT21);
-  set(PCMSK2, PCINT22);
-  set(PCMSK2, PCINT23);
+  // Enable interrupts on PCINT16-19
+  set(PCMSK2, PCINT16);
+  set(PCMSK2, PCINT17);
+  set(PCMSK2, PCINT18);
+  set(PCMSK2, PCINT19);
 
   // Enable interrupts on any pin change
-  set(PCICR, PCIE0);
   set(PCICR, PCIE2);
 }
 
 unsigned int scanKeys()
 {
-  return (((test(PORTD, PORTD5) ? 1 : 0) << 3) |
-	  ((test(PORTD, PORTD6) ? 1 : 0) << 2) |
-	  ((test(PORTD, PORTD7) ? 1 : 0) << 1) |
-	  ((test(PORTB, PORTB0) ? 1 : 0) << 0));
+  return (((test(PIND, PIND3) ? 0 : 1) << 3) |
+  	  ((test(PIND, PIND2) ? 0 : 1) << 2) |
+  	  ((test(PIND, PIND1) ? 0 : 1) << 1) |
+  	  ((test(PIND, PIND0) ? 0 : 1) << 0));
 }
 
 void onKeyChange()
