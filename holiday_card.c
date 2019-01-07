@@ -122,10 +122,10 @@ void toggleLEDs(unsigned int keyCode)
 	{
 	  switch (ledIdx)
 	    {
-	    case 0: set(PORTB, PORTB0); break;
-	    case 1: set(PORTD, PORTD5); break;
-	    case 2: set(PORTD, PORTD6); break;
-	    case 3: set(PORTD, PORTD7); break;
+	    case 0: set(PORTD, PORTD5); break;
+	    case 1: set(PORTD, PORTD6); break;
+	    case 2: set(PORTD, PORTD7); break;
+	    case 3: set(PORTB, PORTB0); break;
 	    default: break;
 	    };
 	}
@@ -133,10 +133,10 @@ void toggleLEDs(unsigned int keyCode)
 	{
 	  switch (ledIdx)
 	    {
-	    case 0: clear(PORTB, PORTB0); break;
-	    case 1: clear(PORTD, PORTD5); break;
-	    case 2: clear(PORTD, PORTD6); break;
-	    case 3: clear(PORTD, PORTD7); break;
+	    case 0: clear(PORTD, PORTD5); break;
+	    case 1: clear(PORTD, PORTD6); break;
+	    case 2: clear(PORTD, PORTD7); break;
+	    case 3: clear(PORTB, PORTB0); break;
 	    default: break;
 	    };
 	}
