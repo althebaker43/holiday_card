@@ -163,10 +163,17 @@ void keySetup()
 
 unsigned int scanKeys()
 {
+#ifndef HANSON_CARD
   return (((test(PIND, PIND3) ? 0 : 1) << 3) |
   	  ((test(PIND, PIND2) ? 0 : 1) << 2) |
   	  ((test(PIND, PIND1) ? 0 : 1) << 1) |
   	  ((test(PIND, PIND0) ? 0 : 1) << 0));
+#else
+  return (((test(PIND, PIND2) ? 0 : 1) << 3) |
+  	  ((test(PIND, PIND1) ? 0 : 1) << 2) |
+  	  ((test(PIND, PIND0) ? 0 : 1) << 1) |
+  	  ((test(PIND, PIND3) ? 0 : 1) << 0));
+#endif
 }
 
 void onKeyChange()
